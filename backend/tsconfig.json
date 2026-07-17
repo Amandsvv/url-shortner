@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", //target: "ES2022" means TypeScript produces modern JavaScript appropriate for a modern Node.js backend.
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    //module and moduleResolution set to NodeNext mean we are choosing the modern Node.js module system. This will later require one matching decision in package.json.
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    "strict": true, //strict: true is non-negotiable for this project. It forces us to handle uncertain values instead of hiding bugs with loose typing.
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    "sourceMap": true,
+
+    "noEmitOnError": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "tests"]
+}

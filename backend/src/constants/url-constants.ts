@@ -1,0 +1,1 @@
+export const GUEST_URL_EXPIRY_DAYS = 7;
