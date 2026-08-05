@@ -3,11 +3,22 @@ import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { pool } from "./db/index.js"
 import { serializeError } from "./utils/serialize-error.js";
+import { redis } from "./config/redis.js";
 
 type ShutDownSignal = 'SIGINT' | "SIGTERM";
 
 async function startup() {
     await pool.query("SELECT 1");
+
+    try {
+        await redis.connect();
+        await redis.ping();
+    } catch (error) {
+        logger.warn("Redis unavailable. Running without cache.", {
+            error: serializeError(error),
+        });
+    }
+
     const server = app.listen(env.PORT, () => {
         logger.info("Application started", {
             port: env.PORT,
@@ -49,6 +60,12 @@ startup().then((server) => {
             await pool.end();
             clearTimeout(forceShutdownTimer);
             logger.info("PostgreSQL pool closed");
+
+            if (redis.isOpen) {
+                await redis.quit();
+                logger.info("Redis connection closed");
+            }
+
             logger.info("Shutdown completed", {
                 signal,
             });
