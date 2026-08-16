@@ -15,6 +15,13 @@
       "when": 1783340173080,
       "tag": "0001_unknown_bedlam",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786903742789,
+      "tag": "0002_lyrical_salo",
+      "breakpoints": true
     }
   ]
 }

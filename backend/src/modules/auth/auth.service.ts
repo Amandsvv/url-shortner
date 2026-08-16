@@ -5,6 +5,8 @@ import { redisService } from "../../infrastructure/redis/redis.services.js";
 import { logger } from "../../config/logger.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { googleConfig } from "../../config/google-env.js";
+import { findOrCreateGoogleUser } from "./auth.repository.js";
+import { createAccessToken } from "../../utils/jwt.js";
 
 export async function startGoogleOAuth() {
     const state = await createGoogleOAuthState();
@@ -39,12 +41,30 @@ export async function callbackGoogleOAuth(code: string, state: string) {
         const idToken = tokens.id_token;
 
         details = await googleOAuthClient.verifyIdToken({ idToken, audience: googleConfig.GOOGLE_CLIENT_ID });
-    }else{
+    } else {
         logger.error("Tokens missing")
         throw new ApiError(400, "Authentication Failed")
     }
 
     const payload = details.getPayload();
-    logger.info("Payload data", { payload });
 
+    if (
+        !payload?.sub ||
+        !payload.email ||
+        !payload.name ||
+        !payload.picture
+    ) {
+        throw new ApiError(400, "Invalid Google account data");
+    }
+
+    const googlePayload = {
+        sub: payload.sub,
+        email: payload.email,
+        name: payload.name,
+        picture: payload.picture,
+    }
+
+    const user = await findOrCreateGoogleUser(googlePayload);
+    const token = await createAccessToken(user.id);
+    logger.info("Access token generated", { userId: user.id });
 }

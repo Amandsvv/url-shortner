@@ -58,7 +58,9 @@ export const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) =
             details: error.details ?? null,
         });
     }
-
+    
+    console.dir(error, { depth: 10 });
+    
     logger.error("Unhandled request error", {
         requestId : req.requestId,
         error: serializeError(error),

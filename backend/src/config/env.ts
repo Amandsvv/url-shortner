@@ -14,7 +14,9 @@ const envSchema = z.object({
         .string()
         .min(1)
         .optional(),
-    FRONTEND_URL : z.string().min(1)
+    FRONTEND_URL : z.string().min(1),
+    JWT_SECRET : z.string().min(10),
+    JWT_ACCESS_EXPIRES_IN : z.string()
 })
 
 export const env = envSchema.parse(process.env);

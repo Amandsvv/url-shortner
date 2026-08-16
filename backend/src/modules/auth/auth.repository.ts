@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { db } from "../../db/index.js"
 import { users } from "../../db/schema/users.schema.js"
+import { ApiError } from "../../utils/ApiError.js";
 
 type GooglePayload = {
     sub : string,
@@ -31,5 +32,8 @@ export async function findOrCreateGoogleUser(payload : GooglePayload){
         },
     }).returning();
 
+    if (!user[0]) {
+        throw new ApiError(500, "Failed to create or retrieve user");
+}
     return user[0];
 }
