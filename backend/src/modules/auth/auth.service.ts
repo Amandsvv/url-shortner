@@ -65,6 +65,8 @@ export async function callbackGoogleOAuth(code: string, state: string) {
     }
 
     const user = await findOrCreateGoogleUser(googlePayload);
-    const token = await createAccessToken(user.id);
+    const accessToken = await createAccessToken(user.id);
     logger.info("Access token generated", { userId: user.id });
+    
+    return {user, accessToken};
 }

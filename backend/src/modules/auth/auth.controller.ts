@@ -12,9 +12,15 @@ export const googleCallbackController = async (req: Request, res: Response) => {
     if (typeof state !== "string" || typeof code !== "string") {
         throw new ApiError(400, "Invalid OAuth callback");
     }
-    await callbackGoogleOAuth(code, state);
+    const {user, accessToken } = await callbackGoogleOAuth(code, state);
     
     return res.status(200).json({
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatarUrl: user.avatarUrl,
+        },
         message: "OAuth state validated",
     });
 }
