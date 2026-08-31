@@ -1,1 +1,2 @@
 export const GUEST_URL_EXPIRY_DAYS = 7;
+export const FREE_USER_ACTIVE_URL_LIMIT = 30;

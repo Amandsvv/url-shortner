@@ -5,26 +5,28 @@ import {
   MAX_SHORT_CODE_GENERATION_ATTEMPTS,
   TEMPORARY_SHORT_CODE_LENGTH_INCREMENT,
 } from "../../constants/short-code.constants.js";
-import { GUEST_URL_EXPIRY_DAYS } from "../../constants/url-constants.js";
+import { FREE_USER_ACTIVE_URL_LIMIT, GUEST_URL_EXPIRY_DAYS } from "../../constants/url-constants.js";
 import { generateShortCode } from "../../utils/short-code.js";
-import { createUrlAtomically } from "./url.repository.js";
+import { countActiveUrlsByUser, createUrlAtomically } from "./url.repository.js";
 import { ShortCodeCollisionError } from "./url.repository.errors.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 type CreateShortUrlInput = {
   originalUrl: string;
 };
 
-export async function createShortUrl(input: CreateShortUrlInput) {
-  const expiresAt = new Date(
-    Date.now() + GUEST_URL_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
-  );
+type GenerateShortUrlInput = {
+    originalUrl: string;
+    ownerId: string | null;
+    expiresAt: Date;
+};
 
+async function generateAndCreateShortUrl(input: GenerateShortUrlInput) {
   const id = uuidv7();
 
   const lengths = [
     DEFAULT_SHORT_CODE_LENGTH,
-    DEFAULT_SHORT_CODE_LENGTH +
-      TEMPORARY_SHORT_CODE_LENGTH_INCREMENT,
+    DEFAULT_SHORT_CODE_LENGTH + TEMPORARY_SHORT_CODE_LENGTH_INCREMENT,
   ];
 
   for (const length of lengths) {
@@ -40,7 +42,8 @@ export async function createShortUrl(input: CreateShortUrlInput) {
           id,
           shortCode,
           originalUrl: input.originalUrl,
-          expiresAt,
+          ownerId: input.ownerId,
+          expiresAt: input.expiresAt,
         });
       } catch (error) {
         if (error instanceof ShortCodeCollisionError) {
@@ -53,4 +56,34 @@ export async function createShortUrl(input: CreateShortUrlInput) {
   }
 
   throw new Error("Unable to generate a unique short code");
+}
+export async function createShortUrl(input: CreateShortUrlInput) {
+  const expiresAt = new Date(
+    Date.now() + GUEST_URL_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+  );
+
+  return generateAndCreateShortUrl({
+    originalUrl: input.originalUrl,
+    ownerId: null,
+    expiresAt,
+  });
+}
+
+export async function createShortUrlByUser(userId: string, input: CreateShortUrlInput,) {
+  const activeUrlCount = await countActiveUrlsByUser(userId);
+
+  if (activeUrlCount >= FREE_USER_ACTIVE_URL_LIMIT) {
+    throw new ApiError(403, "Active URL limit reached");
+  }
+
+   const expiresAt = new Date(
+    Date.now() +
+      GUEST_URL_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+  );
+
+  return generateAndCreateShortUrl({
+    originalUrl: input.originalUrl,
+    ownerId: userId,
+    expiresAt,
+  });
 }

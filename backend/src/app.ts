@@ -5,6 +5,7 @@ import { requestLoggerMiddleware } from "./middleware/request-logger.middleware.
 import helmet from "helmet";
 import cors  from "cors";
 import { env } from "./config/env.js"
+import cookieParser from "cookie-parser"
 
 const app = express();
 
@@ -13,11 +14,13 @@ app.use(helmet());
 app.use(cors({
     origin: env.FRONTEND_URL,
     methods : ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials : true
 }));
 
 app.use(requestIdMiddleware);
 app.use(requestLoggerMiddleware)
+app.use(cookieParser());
 
 app.use(express.json({ limit : "10kb" }));
 

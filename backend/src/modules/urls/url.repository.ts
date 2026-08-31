@@ -2,12 +2,14 @@ import { db } from "../../db/index.js";
 import { reservedShortCodes } from "../../db/schema/reserved-short-codes.schema.js";
 import { urls } from "../../db/schema/urls.schema.js";
 import { ShortCodeCollisionError } from "./url.repository.errors.js";
+import { and, count, eq, gt } from "drizzle-orm";
 
 type CreateUrlInput = {
   id: string;
   shortCode: string;
   originalUrl: string;
   expiresAt: Date;
+  ownerId: string | null;
 };
 
 export async function createUrlAtomically(input: CreateUrlInput) {
@@ -24,6 +26,7 @@ export async function createUrlAtomically(input: CreateUrlInput) {
                 id: input.id,
                 shortCode: input.shortCode,
                 originalUrl: input.originalUrl,
+                ownerId: input.ownerId,
                 expiresAt: input.expiresAt,
             })
             .returning();
@@ -66,4 +69,22 @@ export default function isShortCodeCollision(error: unknown): boolean {
     "constraint" in cause &&
     cause.constraint === "reserved_short_codes_pkey"
   );
+}
+
+export async function countActiveUrlsByUser(userId: string) {
+    const [result] = await db
+        .select({
+            count: count(),
+        })
+        .from(urls)
+        .where(
+            and(
+                eq(urls.ownerId, userId),
+                eq(urls.active, true),
+                gt(urls.expiresAt, new Date()),
+            ),
+        );
+        
+    if(!result) return 0;
+    return result.count;
 }

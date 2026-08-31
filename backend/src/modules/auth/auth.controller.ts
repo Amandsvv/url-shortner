@@ -1,26 +1,86 @@
-import { callbackGoogleOAuth, startGoogleOAuth } from "./auth.service.js";
-import { Request, Response } from "express";
+import { callbackGoogleOAuth, currentUser, logout, refreshAccessToken, startGoogleOAuth } from "./auth.service.js";
+import { CookieOptions, Request, Response } from "express";
 import { ApiError } from "../../utils/ApiError.js";
+import { env } from "../../config/env.js"
+import { ApiSuccessResponse } from "../../utils/ApiSuccessResponse.js";
 
 export const googleController = async (req: Request, res: Response) => {
     const url = await startGoogleOAuth();
     return res.redirect(url);
 }
+
 export const googleCallbackController = async (req: Request, res: Response) => {
     const { state, code } = req.query;
 
     if (typeof state !== "string" || typeof code !== "string") {
         throw new ApiError(400, "Invalid OAuth callback");
     }
-    const {user, accessToken } = await callbackGoogleOAuth(code, state);
     
-    return res.status(200).json({
+    const {user, accessToken, refreshToken } = await callbackGoogleOAuth(code, state);
+    
+    const options : CookieOptions = {
+        httpOnly : true,
+        sameSite : "lax",
+        secure : env.NODE_ENV === "production"
+    }
+
+    return res
+    .cookie("refreshToken", refreshToken, options)
+    .status(200).json({
+        accessToken,
         user: {
             id: user.id,
             name: user.name,
             email: user.email,
             avatarUrl: user.avatarUrl,
         },
-        message: "OAuth state validated",
+        message: "Authentication Successful",
     });
+}
+
+export const refreshTokensController = async(req: Request, res: Response) => {
+    const { refreshToken } = req.cookies.refreshToken;
+    if (typeof refreshToken !== "string") {
+        throw new ApiError(401, "Authentication Failed");
+    }
+    const { accessToken, newRefreshToken } = await refreshAccessToken( refreshToken );
+
+    const options : CookieOptions = {
+        httpOnly : true,
+        sameSite : "lax",
+        secure : env.NODE_ENV === "production"
+    }
+
+    return res
+    .cookie("refreshToken", newRefreshToken, options)
+    .status(200)
+    .json({
+        accessToken
+    })
+}
+
+export const getCurrentUserController = async(req : Request, res : Response) => {
+    const userId = req.user.id;
+    const user = await currentUser(userId);
+
+    return res.status(200).json(new ApiSuccessResponse(200, "User Found", {user}));
+}
+
+export const logoutController =  async(req : Request, res : Response) => {
+    const refreshToken = req.cookies.refreshToken;
+    
+    if(typeof refreshToken === "string"){
+        await logout(refreshToken);
+    }
+
+    const options : CookieOptions = {
+        httpOnly : true,
+        sameSite : "lax",
+        secure : env.NODE_ENV === "production"
+    }
+    
+    return res
+    .clearCookie("refreshToken", options)
+    .status(200)
+    .json({ message : "User logged out successfully"})
 }

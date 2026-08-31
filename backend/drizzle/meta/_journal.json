@@ -22,6 +22,27 @@
       "when": 1786903742789,
       "tag": "0002_lyrical_salo",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786977611702,
+      "tag": "0003_chemical_franklin_richards",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786979345753,
+      "tag": "0004_new_nocturne",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788183160829,
+      "tag": "0005_known_tag",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,9 @@ declare global {
         interface Request {
             // your property
             requestId : string;
+            user: {
+                id: string;
+            };
         }
     }
 }
