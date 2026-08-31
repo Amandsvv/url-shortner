@@ -6,19 +6,19 @@ import { CacheTTLSeconds } from "../../utils/redirectTTL.js";
 import { logger } from "../../config/logger.js";
 
 type RedirectData =
-Awaited<
-    ReturnType<typeof findRedirectDataByShortCode>
->;
+    Awaited<
+        ReturnType<typeof findRedirectDataByShortCode>
+    >;
 
-function validateRedirect(data : RedirectData) {
-    if(!data) 
+function validateRedirect(data: RedirectData) {
+    if (!data)
         return;
 
-    if (!data.expiresAt) {
-        return;
+    if (!data.active) {
+        throw new ApiError(404, "Short Url is inactive");
     }
 
-    if (+data.expiresAt <= Date.now()) {
+    if (data.expiresAt && +data.expiresAt <= Date.now()) {
         throw new ApiError(410, "Short Url got expired");
     }
 }
@@ -48,6 +48,8 @@ export async function resolveRedirectUrl(shortCode: string) {
         throw new ApiError(404, "Short Url not found")
     }
 
+    validateRedirect(redirectData);
+    
     const ttlSeconds = CacheTTLSeconds(redirectData.expiresAt);
 
     await redisService.set(cacheKey, redirectData, ttlSeconds);
