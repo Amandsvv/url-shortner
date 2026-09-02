@@ -19,6 +19,6 @@
 
     "noEmitOnError": true
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/utils/amnual-test.js"],
   "exclude": ["node_modules", "dist", "tests"]
 }

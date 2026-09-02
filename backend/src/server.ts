@@ -4,15 +4,20 @@ import { logger } from "./config/logger.js";
 import { pool } from "./db/index.js"
 import { serializeError } from "./utils/serialize-error.js";
 import { redis } from "./config/redis.js";
+import { startAnalyticsWorker } from "./modules/analytics/analytics.worker.js";
 
 type ShutDownSignal = 'SIGINT' | "SIGTERM";
 
 async function startup() {
     await pool.query("SELECT 1");
 
+    let stopAnalyticsWorker: (() => void) | undefined;
+
     try {
         await redis.connect();
         await redis.ping();
+
+        stopAnalyticsWorker = startAnalyticsWorker();
     } catch (error) {
         logger.warn("Redis unavailable. Running without cache.", {
             error: serializeError(error),
@@ -23,11 +28,15 @@ async function startup() {
         logger.info("Application started", {
             port: env.PORT,
         });
-    })
-    return server;
+    });
+
+    return {
+        server,
+        stopAnalyticsWorker,
+    };
 }
 
-startup().then((server) => {
+startup().then(({ server, stopAnalyticsWorker }) => {
     let isShuttingDown = false;
     async function shutdown(signal: ShutDownSignal) {
         if (isShuttingDown) {
@@ -56,6 +65,8 @@ startup().then((server) => {
                 });
             });
             logger.info("HTTP server closed");
+            
+            stopAnalyticsWorker?.();
 
             await pool.end();
             clearTimeout(forceShutdownTimer);

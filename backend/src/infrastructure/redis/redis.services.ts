@@ -2,6 +2,11 @@ import { redis, redisAvailable } from "../../config/redis.js";
 import { logger } from "../../config/logger.js";
 import { serializeError } from "../../utils/serialize-error.js";
 
+type RedisScanResult = {
+    cursor: string;
+    keys: string[];
+};
+
 class RedisService {
     async get<T>(key: string): Promise<T | null> {
         if (!redisAvailable) {
@@ -87,6 +92,113 @@ class RedisService {
         } catch (error) {
             logger.warn("Redis INCR failed", {
                 key,
+                error: serializeError(error),
+            });
+
+            return null;
+        }
+    }
+
+    async scan(
+        cursor: string,
+        pattern: string,
+        count: number,
+    ): Promise<RedisScanResult | null> {
+        if (!redisAvailable) {
+            return null;
+        }
+
+        try {
+            const result = await redis.scan(cursor, {
+                MATCH: pattern,
+                COUNT: count,
+            });
+
+            return {
+                cursor: result.cursor,
+                keys: result.keys,
+            };
+        } catch (error) {
+            logger.warn("Redis SCAN failed", {
+                cursor,
+                pattern,
+                count,
+                error: serializeError(error),
+            });
+
+            return null;
+        }
+    }
+
+    async getNumber(key: string): Promise<number | null> {
+        if (!redisAvailable) {
+            return null;
+        }
+
+        try {
+            const value = await redis.get(key);
+
+            if (value === null) {
+                return null;
+            }
+
+            const count = Number(value);
+
+            if (!Number.isInteger(count)) {
+                logger.warn("Redis counter is not an integer", {
+                    key,
+                    value,
+                });
+
+                return null;
+            }
+
+            return count;
+        } catch (error) {
+            logger.warn("Redis GET NUMBER failed", {
+                key,
+                error: serializeError(error),
+            });
+
+            return null;
+        }
+    }
+    
+    async handoffClickCounter(
+        activeKey: string,
+        processingKey: string,
+    ): Promise<number | null> {
+        if (!redisAvailable) {
+            return null;
+        }
+
+        const script = `
+        local value = redis.call("GET", KEYS[1])
+
+        if not value then
+            return 0
+        end
+
+        if redis.call("EXISTS", KEYS[2]) == 1 then
+            return -1
+        end
+
+        redis.call("SET", KEYS[2], value)
+        redis.call("DEL", KEYS[1])
+
+        return tonumber(value)
+    `;
+
+        try {
+            const result = await redis.eval(script, {
+                keys: [activeKey, processingKey],
+            });
+
+            return Number(result);
+        } catch (error) {
+            logger.warn("Redis click counter handoff failed", {
+                activeKey,
+                processingKey,
                 error: serializeError(error),
             });
 
