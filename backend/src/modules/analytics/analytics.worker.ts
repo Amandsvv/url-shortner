@@ -8,7 +8,7 @@ import { serializeError } from "../../utils/serialize-error.js";
 const MAX_CLICK_KEYS_PER_FLUSH = 500;
 const CLICK_KEY_PATTERN = "url:clicks:*";
 
-async function flushPendingClicks() {
+export async function flushPendingClicks() {
     let cursor = "0";
     let handedOffKeys = 0;
     const batchId = randomUUID();

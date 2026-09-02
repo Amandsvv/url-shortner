@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "test:repository": "tsx src/scripts/test-url-repository.ts"
+    "test:repository": "tsx src/scripts/test-url-repository.ts",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "keywords": [],
   "author": "",

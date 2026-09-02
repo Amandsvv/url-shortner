@@ -5,7 +5,9 @@ const envSchema = z.object({
     PORT: z.coerce.number().int().positive().default(3000),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+    DATABASE_URL_TEST: z.string().min(1, "DATABASE_URL_TEST is required"),
     REDIS_URL: z.string().min(1),
+    REDIS_URL_TEST: z.string().min(1),
     LOG_LEVEL: z
         .enum(["error", "warn", "info", "debug"])
         .optional(),

@@ -4,9 +4,13 @@ import { logger } from "./logger.js";
 import { serializeError } from "../utils/serialize-error.js";
 
 export let redisAvailable = false;
+const redisUrl =
+    env.NODE_ENV === "test"
+        ? env.REDIS_URL_TEST
+        : env.REDIS_URL;
 
 export const redis = createClient({
-    url : env.REDIS_URL
+    url : redisUrl
 });
 
 redis.on("connect", ()=> {
