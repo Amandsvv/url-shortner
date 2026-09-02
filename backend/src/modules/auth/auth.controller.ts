@@ -39,10 +39,12 @@ export const googleCallbackController = async (req: Request, res: Response) => {
 }
 
 export const refreshTokensController = async(req: Request, res: Response) => {
-    const { refreshToken } = req.cookies.refreshToken;
+    const refreshToken  = req.cookies.refreshToken;
+
     if (typeof refreshToken !== "string") {
         throw new ApiError(401, "Authentication Failed");
     }
+    
     const { accessToken, newRefreshToken } = await refreshAccessToken( refreshToken );
 
     const options : CookieOptions = {
