@@ -32,6 +32,7 @@ app.get('/health', (req,res)=>{
 import UrlRoutes  from "./modules/urls/url.routes.js";
 import redirectRouter from "./modules/redirect/redirect.routes.js";
 import authRouter from "./modules/auth/auth.routes.js";
+import userUrlRouter from "./modules/users/urls/user-urls.route.js";
 
 
 app.get("/hit", (req, res) =>{
@@ -39,6 +40,7 @@ app.get("/hit", (req, res) =>{
 })
 app.use("/api/v1/urls", UrlRoutes);
 app.use("/api/v1/auth", authRouter)
+app.use("/api/v1/user", userUrlRouter)
 app.use("/", redirectRouter);
 app.use(globalErrorHandler);
 export default app;
