@@ -2,7 +2,6 @@ import type { Request, Response } from "express";
 import { updateUserUrlSchema, userUrlsQuerySchema } from "./user-urls.schema.js";
 import { deleteUserUrlById, updateUserUrlById, userUrls, userUrlsById } from "./user-urls.service.js";
 import { ApiSuccessResponse } from "../../../utils/ApiSuccessResponse.js";
-import { success } from "zod";
 import { ApiError } from "../../../utils/ApiError.js";
 
 export async function getUserUrls(req: Request, res: Response) {
@@ -38,14 +37,19 @@ export async function getUserUrlsById(
 
     const data = await userUrlsById(userId, urlId);
 
-    return res.status(200).json({
-        status: "success",
-        message: "Short URL found.",
-        data,
-    });
+    return res.status(200).json(
+        new ApiSuccessResponse(
+            200,
+            "Short URL found.",
+            data,
+        ),
+    );
 }
 
-export async function updateUserUrlController(req: Request, res: Response){
+export async function updateUserUrlController(
+    req: Request,
+    res: Response,
+) {
     const userId = req.user.id;
     const { id: urlId } = req.params;
 
@@ -55,16 +59,22 @@ export async function updateUserUrlController(req: Request, res: Response){
 
     const changes = updateUserUrlSchema.parse(req.body);
 
-    const data = await updateUserUrlById(userId, urlId, changes);
+    const data = await updateUserUrlById(
+        userId,
+        urlId,
+        changes,
+    );
 
-    return res.status(200).json({
-        status: "success",
-        message: "Url updated",
-        data
-    })
+    return res.status(200).json(
+        new ApiSuccessResponse(
+            200,
+            "URL updated successfully",
+            data,
+        ),
+    );
 }
 
-export async function deleteUserUrlController(req: Request, res: Response){
+export async function deleteUserUrlController(req: Request, res: Response) {
     const userId = req.user.id;
     const { id: urlId } = req.params;
 
@@ -74,8 +84,11 @@ export async function deleteUserUrlController(req: Request, res: Response){
 
     await deleteUserUrlById(userId, urlId);
 
-    return res.status(200).json({
-        status: "success",
-        message: "Url Deleted",
-    })
+    return res.status(200).json(
+        new ApiSuccessResponse(
+            200,
+            "URL deleted successfully",
+            null,
+        ),
+    );
 }
