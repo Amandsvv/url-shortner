@@ -38,3 +38,17 @@
 // await flushPendingClicks();
 
 // await redis.quit();
+import { redis } from "../../config/redis.js";
+import { redisService } from "../../infrastructure/redis/redis.services.js";
+await redis.connect();
+
+const result = await redisService.consumeRateLimit(
+    "rate-limit:test",
+    10,
+    86400,
+);
+
+console.log(result)
+
+await redis.quit();
+

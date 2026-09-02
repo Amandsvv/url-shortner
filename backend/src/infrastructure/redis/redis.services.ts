@@ -7,6 +7,12 @@ type RedisScanResult = {
     keys: string[];
 };
 
+type RateLimitResult = {
+    count: number,
+    allowed: boolean,
+    ttl: number
+};
+
 class RedisService {
     async get<T>(key: string): Promise<T | null> {
         if (!redisAvailable) {
@@ -163,7 +169,7 @@ class RedisService {
             return null;
         }
     }
-    
+
     async handoffClickCounter(
         activeKey: string,
         processingKey: string,
@@ -199,6 +205,50 @@ class RedisService {
             logger.warn("Redis click counter handoff failed", {
                 activeKey,
                 processingKey,
+                error: serializeError(error),
+            });
+
+            return null;
+        }
+    }
+
+    async consumeRateLimit(
+        key: string,
+        limit: number,
+        windowSeconds: number,
+    ): Promise<RateLimitResult | null> {
+        if (!redisAvailable) {
+            return null;
+        }
+
+        const script = `
+        local count = redis.call("INCR", KEYS[1])
+
+        if count == 1 then
+            redis.call("EXPIRE", KEYS[1], ARGV[1])
+        end
+
+        local ttl = redis.call("TTL", KEYS[1])
+
+        return { count, ttl }
+    `;
+
+        try {
+            const result = await redis.eval(script, {
+                keys: [key],
+                arguments: [String(windowSeconds)],
+            });
+
+            const [count, ttl] = result as [number, number];
+
+            return {
+                count,
+                allowed: count <= limit,
+                ttl,
+            };
+        } catch (error) {
+            logger.warn("Redis rate limiter failed", {
+                key,
                 error: serializeError(error),
             });
 
