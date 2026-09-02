@@ -43,6 +43,13 @@
       "when": 1788183160829,
       "tag": "0005_known_tag",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788331078706,
+      "tag": "0006_living_naoko",
+      "breakpoints": true
     }
   ]
 }

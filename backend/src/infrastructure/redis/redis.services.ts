@@ -13,7 +13,7 @@ class RedisService {
             if (!value) {
                 return null;
             }
-            
+
             return JSON.parse(value) as T;
         } catch (error) {
             logger.warn("Redis GET failed", {
@@ -75,6 +75,23 @@ class RedisService {
 
         }
 
+    }
+
+    async incr(key: string): Promise<number | null> {
+        if (!redisAvailable) {
+            return null;
+        }
+
+        try {
+            return await redis.incr(key);
+        } catch (error) {
+            logger.warn("Redis INCR failed", {
+                key,
+                error: serializeError(error),
+            });
+
+            return null;
+        }
     }
 }
 

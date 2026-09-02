@@ -1,4 +1,4 @@
-import { boolean, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, pgTable,integer, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { users } from "./users.schema.js";
 
 export const urls = pgTable(
@@ -15,6 +15,8 @@ export const urls = pgTable(
         }),
 
         active: boolean("active").notNull().default(true),
+
+        clickCount: integer("click_count").notNull().default(0),
 
         expiresAt: timestamp("expires_at", {
             withTimezone: true

@@ -3,6 +3,7 @@ import { reservedShortCodes } from "../../db/schema/reserved-short-codes.schema.
 import { urls } from "../../db/schema/urls.schema.js";
 import { ShortCodeCollisionError } from "./url.repository.errors.js";
 import { and, count, eq, gt } from "drizzle-orm";
+import { users } from "../../db/schema/users.schema.js";
 
 type CreateUrlInput = {
   id: string;
@@ -87,4 +88,16 @@ export async function countActiveUrlsByUser(userId: string) {
         
     if(!result) return 0;
     return result.count;
+}
+
+export async function findUserPlan(userId: string) {
+    const result = await db
+        .select({
+            plan: users.plan,
+        })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+    return result[0];
 }
