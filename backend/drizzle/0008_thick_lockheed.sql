@@ -1,0 +1,2 @@
+CREATE INDEX "urls_owner_created_at_idx" ON "urls" USING btree ("owner_id","created_at");--> statement-breakpoint
+CREATE INDEX "urls_owner_active_expires_idx" ON "urls" USING btree ("owner_id","active","expires_at");

@@ -3,9 +3,6 @@ import { pool } from "../../src/db/index.js";
 import { redis } from "../../src/config/redis.js";
 
 beforeAll(async () => {
-    const result = await pool.query("SELECT current_database()");
-    console.log(result.rows[0]);
-
     if (!redis.isOpen) {
         await redis.connect();
     }

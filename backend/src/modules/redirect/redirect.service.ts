@@ -24,9 +24,6 @@ function validateRedirect(data: RedirectData) {
 }
 
 export async function resolveRedirectUrl(shortCode: string) {
-    logger.info("resolveRedirectUrl called", {
-    shortCode,
-});
     const cacheKey = cacheKeys.url(shortCode);
 
     const redisData = await redisService.get<RedirectData>(cacheKey);
@@ -34,12 +31,18 @@ export async function resolveRedirectUrl(shortCode: string) {
     if (redisData) {
         validateRedirect(redisData);
 
-        logger.info("Redirect cache hit", {
+        logger.debug("Redirect cache hit", {
             shortCode,
         });
 
-        logger.info("Recording click", { shortCode });
-        await redisService.incr(cacheKeys.clicks(shortCode));
+        const clickCount = await redisService.incr(
+            cacheKeys.clicks(shortCode),
+        );
+
+        logger.info("Click recorded", {
+            shortCode,
+            clickCount
+        });
 
         return redisData.originalUrl;
     }
@@ -60,8 +63,14 @@ export async function resolveRedirectUrl(shortCode: string) {
 
     await redisService.set(cacheKey, redirectData, ttlSeconds);
 
-    logger.info("Recording click 2", { shortCode });
-    await redisService.incr(cacheKeys.clicks(shortCode));
+    const clickCount = await redisService.incr(
+        cacheKeys.clicks(shortCode),
+    );
+
+    logger.info("Click recorded", {
+        shortCode,
+        clickCount,
+    });
 
     return redirectData.originalUrl;
 }
