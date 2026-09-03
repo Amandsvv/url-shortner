@@ -8,7 +8,7 @@ import { env } from "./config/env.js"
 import cookieParser from "cookie-parser"
 
 const app = express();
-
+app.set("trust proxy", env.TRUST_PROXY);
 app.use(helmet());
 
 app.use(cors({
