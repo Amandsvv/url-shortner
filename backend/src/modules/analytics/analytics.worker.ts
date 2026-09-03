@@ -84,27 +84,34 @@ export async function flushPendingClicks() {
         itemCount: items.length,
     });
 }
-
 export function startAnalyticsWorker() {
     const intervalMs = 30_000;
+
     let isFlushing = false;
+    let stopped = false;
+    let currentRun: Promise<void> | null = null;
 
     const run = async () => {
-        if (isFlushing) {
+        if (stopped || isFlushing) {
             return;
         }
 
         isFlushing = true;
 
-        try {
-            await flushPendingClicks();
-        } catch (error) {
-            logger.error("Analytics worker flush failed", {
-                error: serializeError(error),
-            });
-        } finally {
-            isFlushing = false;
-        }
+        currentRun = (async () => {
+            try {
+                await flushPendingClicks();
+            } catch (error) {
+                logger.error("Analytics worker flush failed", {
+                    error: serializeError(error),
+                });
+            } finally {
+                isFlushing = false;
+                currentRun = null;
+            }
+        })();
+
+        await currentRun;
     };
 
     void run();
@@ -113,8 +120,14 @@ export function startAnalyticsWorker() {
         void run();
     }, intervalMs);
 
-    return () => {
+    return async () => {
+        stopped = true;
         clearInterval(interval);
+
+        if (currentRun) {
+            await currentRun;
+        }
+
         logger.info("Analytics worker stopped");
     };
 }

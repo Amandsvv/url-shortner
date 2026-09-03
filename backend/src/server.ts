@@ -11,8 +11,8 @@ type ShutDownSignal = 'SIGINT' | "SIGTERM";
 async function startup() {
     await pool.query("SELECT 1");
 
-    let stopAnalyticsWorker: (() => void) | undefined;
-
+    let stopAnalyticsWorker: (() => Promise<void>) | undefined;
+    
     try {
         await redis.connect();
         await redis.ping();
@@ -65,8 +65,8 @@ startup().then(({ server, stopAnalyticsWorker }) => {
                 });
             });
             logger.info("HTTP server closed");
-            
-            stopAnalyticsWorker?.();
+
+            await stopAnalyticsWorker?.();
 
             await pool.end();
             clearTimeout(forceShutdownTimer);
