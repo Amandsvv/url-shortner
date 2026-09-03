@@ -174,4 +174,17 @@ describe("Guest URL API", () => {
             details: null,
         });
     });
+
+    it("hides unexpected errors from clients", async () => {
+        const response = await request(app)
+            .get("/hit");
+
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({
+            success: false,
+            statusCode: 500,
+            message: "Internal server error",
+            details: null,
+        });
+    });
 });
