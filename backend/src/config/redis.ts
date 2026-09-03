@@ -2,12 +2,17 @@ import { createClient } from "redis";
 import { env } from "./env.js";
 import { logger } from "./logger.js";
 import { serializeError } from "../utils/serialize-error.js";
+import { ApiError } from "../utils/ApiError.js";
 
 export let redisAvailable = false;
 const redisUrl =
     env.NODE_ENV === "test"
         ? env.REDIS_URL_TEST
         : env.REDIS_URL;
+
+if (!redisUrl) {
+    throw new Error("Redis URL is missing");
+}
 
 export const redis = createClient({
     url : redisUrl
