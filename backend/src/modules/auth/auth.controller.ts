@@ -27,18 +27,15 @@ export const googleCallbackController = async (req: Request, res: Response) => {
 
 
 
-    return res
-        .cookie("refreshToken", refreshToken, refreshCookieOptions)
-        .status(200).json({
-            accessToken,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                avatarUrl: user.avatarUrl,
-            },
-            message: "Authentication Successful",
-        });
+    res.cookie(
+        "refreshToken",
+        refreshToken,
+        refreshCookieOptions,
+    );
+
+    return res.redirect(
+        `${env.FRONTEND_URL}/dashboard`,
+    );
 }
 
 export const refreshTokensController = async (req: Request, res: Response) => {

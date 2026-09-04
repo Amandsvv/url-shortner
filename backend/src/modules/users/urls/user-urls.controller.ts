@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { updateUserUrlSchema, userUrlsQuerySchema } from "./user-urls.schema.js";
-import { deleteUserUrlById, updateUserUrlById, userUrls, userUrlsById } from "./user-urls.service.js";
+import { deleteUserUrlById, getUserStats, updateUserUrlById, userUrls, userUrlsById } from "./user-urls.service.js";
 import { ApiSuccessResponse } from "../../../utils/ApiSuccessResponse.js";
 import { ApiError } from "../../../utils/ApiError.js";
 
@@ -91,4 +91,22 @@ export async function deleteUserUrlController(req: Request, res: Response) {
             null,
         ),
     );
+}
+
+export async function getUserStatsController(
+    req: Request,
+    res: Response,
+) {
+    const userId = req.user.id;
+
+    const stats = await getUserStats    (
+        userId,
+    );
+
+    return res.status(200).json({
+        success: true,
+        statusCode: 200,
+        message: "User statistics retrieved successfully",
+        data: stats,
+    });
 }

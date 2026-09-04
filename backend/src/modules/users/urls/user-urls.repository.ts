@@ -1,4 +1,4 @@
-import { and, count, desc, eq } from "drizzle-orm";
+import { and, count,sum, desc, eq, gt } from "drizzle-orm";
 import { db } from "../../../db/index.js";
 import { urls } from "../../../db/schema/urls.schema.js";
 import { updateUrl } from "./user-urls.schema.js";
@@ -25,6 +25,7 @@ export async function findUserUrls(
             shortCode: urls.shortCode,
             originalUrl: urls.originalUrl,
             active: urls.active,
+            clickCount: urls.clickCount,
             expiresAt: urls.expiresAt,
             createdAt: urls.createdAt,
             updatedAt: urls.updatedAt,
@@ -55,6 +56,33 @@ export async function findUserUrlsById(userId: string, urlId : string){
         ).limit(1)
 
         return result[0];
+}
+
+export async function UserStats(userId: string) {
+    const [activeResult] = await db
+        .select({
+            activeUrls: count(urls.id),
+        })
+        .from(urls)
+        .where(
+            and(
+                eq(urls.ownerId, userId),
+                eq(urls.active, true),
+                gt(urls.expiresAt, new Date()),
+            ),
+        );
+
+    const [clickResult] = await db
+        .select({
+            totalClicks: sum(urls.clickCount),
+        })
+        .from(urls)
+        .where(eq(urls.ownerId, userId));
+
+    return {
+        activeUrls: Number(activeResult?.activeUrls ?? 0),
+        totalClicks: Number(clickResult?.totalClicks ?? 0),
+    };
 }
 
 export async function updateUserUrl(userId: string, urlId: string, changes: updateUrl) {

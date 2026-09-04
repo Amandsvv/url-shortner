@@ -1,7 +1,7 @@
 import { cacheKeys } from "../../../infrastructure/redis/cache-keys.js";
 import { redisService } from "../../../infrastructure/redis/redis.services.js";
 import { ApiError } from "../../../utils/ApiError.js";
-import { countUserUrls, deleteUserUrl, findUserUrls, findUserUrlsById, updateUserUrl } from "./user-urls.repository.js";
+import { countUserUrls, deleteUserUrl, findUserUrls, findUserUrlsById, updateUserUrl, UserStats } from "./user-urls.repository.js";
 import type { updateUrl, UserUrlsQuery } from "./user-urls.schema.js";
 
 export async function userUrls(userId : string, query : UserUrlsQuery){
@@ -21,6 +21,10 @@ export async function userUrlsById(userId: string, urlId : string){
         throw new ApiError(404, "Short URL not found.")
     }
     return data;
+}
+
+export async function getUserStats(userId: string) {
+    return await UserStats(userId);
 }
 
 export async function updateUserUrlById(userId : string, urlId: string, changes : updateUrl){
