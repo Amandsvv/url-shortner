@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  --font-brand: var(--font-space-grotesk), sans-serif;
+
+  --color-page: #f5f5f3;
+  --color-surface: #ffffff;
+  --color-text: #181818;
+  --color-muted: #8b8b87;
+  --color-border: #deded8;
+
+  --color-accent: #a8ff3e;
+  --color-accent-hover: #96ed2d;
+
+  --color-dark: #1d1d1d;
+
+  --radius-pill: 999px;
+  --radius-card: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-page);
+  color: var(--color-text);
+  font-family: var(--font-brand);
+}
