@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import { ApiClientError } from "@/lib/api";
 import { useEffect, useState } from "react";
 
 type StatsResponse = {
@@ -14,7 +15,11 @@ type StatsResponse = {
 };
 
 export default function DashboardPage() {
-    const { authFetch, user } = useAuth();
+    const {
+        authFetch,
+        loading: authLoading,
+        user,
+    } = useAuth();
 
     const [stats, setStats] = useState({
         activeUrls: 0,
@@ -25,6 +30,12 @@ export default function DashboardPage() {
         useState(true);
 
     useEffect(() => {
+        if (authLoading || !user) {
+            return;
+        }
+
+        const controller = new AbortController();
+
         const loadStats = async () => {
             try {
                 setStatsLoading(true);
@@ -32,21 +43,45 @@ export default function DashboardPage() {
                 const response =
                     await authFetch<StatsResponse>(
                         "/api/v1/user/stats",
+                        {
+                            signal: controller.signal,
+                        },
                     );
+
+                if (controller.signal.aborted) {
+                    return;
+                }
 
                 setStats(response.data);
             } catch (error) {
+                if (controller.signal.aborted) {
+                    return;
+                }
+
+                if (
+                    error instanceof ApiClientError &&
+                    error.statusCode === 401
+                ) {
+                    return;
+                }
+
                 console.error(
                     "Failed to load dashboard stats",
                     error,
                 );
             } finally {
-                setStatsLoading(false);
+                if (!controller.signal.aborted) {
+                    setStatsLoading(false);
+                }
             }
         };
 
         void loadStats();
-    }, [authFetch]);
+
+        return () => {
+            controller.abort();
+        };
+    }, [authFetch, authLoading, user]);
 
     return (
         <section className="space-y-8">
