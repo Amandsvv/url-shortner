@@ -130,5 +130,6 @@ jobs:
           docker build
           --build-arg NEXT_PUBLIC_API_URL=http://localhost:3000
           --build-arg NEXT_PUBLIC_APP_URL=http://localhost:5000
+          --build-arg BACKEND_API_URL=http://localhost:3000
           -t url-shortener-frontend:ci
           ./frontend
