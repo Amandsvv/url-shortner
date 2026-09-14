@@ -170,7 +170,7 @@ jobs:
         run: docker load -i url-shortener-images.tar
 
       - name: Start Compose stack
-        run: docker compose up -d
+        run: docker compose up -d --no-build
 
       - name: Wait for services
         run: |
