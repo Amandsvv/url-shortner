@@ -33,6 +33,7 @@ services:
     command: redis-server --appendonly yes
 
   backend:
+    image: url-shortener-backend:ci
     build:
       context: ./backend
     container_name: url_shortener_backend
@@ -64,6 +65,7 @@ services:
         condition: service_healthy
 
   frontend:
+    image: url-shortener-frontend:ci
     build:
       context: ./frontend
       args:
