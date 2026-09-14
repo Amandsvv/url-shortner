@@ -10,6 +10,8 @@ import request from "supertest";
 import app from "../../src/app.js";
 import { redisService } from "../../src/infrastructure/redis/redis.services.js";
 import { cacheKeys } from "../../src/infrastructure/redis/cache-keys.js";
+import express from "express";
+import { globalErrorHandler } from "../../src/middleware/eror.middleware.js";
 
 describe("Guest URL API", () => {
     afterEach(() => {
