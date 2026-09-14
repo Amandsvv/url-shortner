@@ -176,12 +176,21 @@ jobs:
         run: |
           for i in {1..30}; do
             if docker compose ps --status running | grep -q url_shortener_frontend; then
-              break
+              if curl --silent --fail http://localhost:5000/ > /dev/null; then
+                echo "Frontend is ready."
+                exit 0
+              fi
             fi
             sleep 2
           done
+      
+          echo "Frontend did not become ready within 60 seconds."
           docker compose ps
-
+          exit 1
+          
+      - name: Check docker status
+        run: docker compose ps
+        
       - name: Smoke test backend
         run: curl --fail --retry 10 --retry-delay 2 http://localhost:3000/health
 
