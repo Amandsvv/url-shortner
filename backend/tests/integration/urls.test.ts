@@ -176,9 +176,17 @@ describe("Guest URL API", () => {
     });
 
     it("hides unexpected errors from clients", async () => {
-        const response = await request(app)
-            .get("/hit");
-
+        const testApp = express();
+    
+        testApp.get("/test-error", () => {
+            throw new Error("Unexpected internal error");
+        });
+    
+        testApp.use(globalErrorHandler);
+    
+        const response = await request(testApp)
+            .get("/test-error");
+    
         expect(response.status).toBe(500);
         expect(response.body).toEqual({
             success: false,
