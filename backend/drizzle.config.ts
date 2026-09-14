@@ -1,16 +1,19 @@
-import { env } from "./src/config/env.js"
 import { defineConfig } from "drizzle-kit";
 
 const databaseUrl =
     process.env.NODE_ENV === "test"
-        ? env.DATABASE_URL_TEST
-        : env.DATABASE_URL;
+        ? process.env.DATABASE_URL_TEST
+        : process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+    throw new Error("Database URL is required for migrations");
+}
 
 export default defineConfig({
-  dialect: "postgresql",
-  schema: "./src/db/schema/*.ts",
-  out: "./drizzle",
-  dbCredentials: {
-    url: databaseUrl,
-  },
+    dialect: "postgresql",
+    schema: "./src/db/schema/*.ts",
+    out: "./drizzle",
+    dbCredentials: {
+        url: databaseUrl,
+    },
 });
