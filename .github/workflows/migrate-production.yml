@@ -1,0 +1,55 @@
+name: Run Production Database Migrations
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: Migrate production database
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      PROJECT_ID: project-40103b09-6157-4570-a24
+      REGION: asia-south2
+      MIGRATION_IMAGE: asia-south2-docker.pkg.dev/project-40103b09-6157-4570-a24/shortlyweb/migrate
+      RUNTIME_SERVICE_ACCOUNT: shortlyweb-backend@project-40103b09-6157-4570-a24.iam.gserviceaccount.com
+      CLOUD_SQL_INSTANCE: project-40103b09-6157-4570-a24:asia-south2:shortlyweb-db
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: project-40103b09-6157-4570-a24
+          workload_identity_provider: projects/51673888941/locations/global/workloadIdentityPools/shortlyweb-github/providers/github-actions
+          service_account: shortlyweb-deployer@project-40103b09-6157-4570-a24.iam.gserviceaccount.com
+
+      - name: Set up Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker authentication
+        run: gcloud auth configure-docker asia-south2-docker.pkg.dev --quiet
+
+      - name: Build migration image
+        run: |
+          docker build             -f backend/Dockerfile.migrate             -t "${MIGRATION_IMAGE}:${GITHUB_SHA}"             ./backend
+
+      - name: Push migration image
+        run: |
+          docker push "${MIGRATION_IMAGE}:${GITHUB_SHA}"
+
+      - name: Deploy and execute migration job
+        run: |
+          gcloud run jobs deploy shortlyweb-db-migrate             --region="${REGION}"             --image="${MIGRATION_IMAGE}:${GITHUB_SHA}"             --service-account="${RUNTIME_SERVICE_ACCOUNT}"             --set-secrets="DATABASE_URL=shortlyweb-database-url:1"             --set-env-vars="NODE_ENV=production"             --set-cloudsql-instances="${CLOUD_SQL_INSTANCE}"             --network=default             --subnet=default             --vpc-egress=private-ranges-only             --tasks=1             --max-retries=0             --task-timeout=10m             --execute-now             --wait
