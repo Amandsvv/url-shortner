@@ -10,6 +10,8 @@ import request from "supertest";
 import app from "../../src/app.js";
 import { redisService } from "../../src/infrastructure/redis/redis.services.js";
 import { cacheKeys } from "../../src/infrastructure/redis/cache-keys.js";
+import express from "express";
+import { globalErrorHandler } from "../../src/middleware/eror.middleware.js";
 
 describe("Guest URL API", () => {
     afterEach(() => {
@@ -176,9 +178,17 @@ describe("Guest URL API", () => {
     });
 
     it("hides unexpected errors from clients", async () => {
-        const response = await request(app)
-            .get("/hit");
-
+        const testApp = express();
+    
+        testApp.get("/test-error", () => {
+            throw new Error("Unexpected internal error");
+        });
+    
+        testApp.use(globalErrorHandler);
+    
+        const response = await request(testApp)
+            .get("/test-error");
+    
         expect(response.status).toBe(500);
         expect(response.body).toEqual({
             success: false,

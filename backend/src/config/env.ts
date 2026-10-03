@@ -35,7 +35,11 @@ const envSchema = z.object({
 
     JWT_ACCESS_EXPIRES_IN: z.string().min(1),
 
-    TRUST_PROXY: z.coerce.number().int().nonnegative().default(0)
+    TRUST_PROXY: z.coerce.number().int().nonnegative().default(0),
+
+    REDIS_AUTH: z.string().min(1).optional(),
+
+    REDIS_TLS_CA_PATH: z.string().min(1).optional(),
 });
 
 const parsedEnv = envSchema.parse(process.env);
@@ -55,6 +59,16 @@ if (parsedEnv.NODE_ENV === "test") {
 
     if (!parsedEnv.REDIS_URL) {
         throw new Error("REDIS_URL is required");
+    }
+}
+
+if (parsedEnv.NODE_ENV === "production") {
+    if (!parsedEnv.REDIS_AUTH) {
+        throw new Error("REDIS_AUTH is required in production");
+    }
+
+    if (!parsedEnv.REDIS_TLS_CA_PATH) {
+        throw new Error("REDIS_TLS_CA_PATH is required in production");
     }
 }
 

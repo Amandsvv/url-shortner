@@ -66,13 +66,6 @@ export const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) =
         path: req.originalUrl,
     });
 
-    logger.error("Unhandled request error", {
-        requestId: req.requestId,
-        error: serializeError(error),
-        method: req.method,
-        path: req.originalUrl,
-    });
-
     return res.status(500).json({
         success: false,
         statusCode: 500,

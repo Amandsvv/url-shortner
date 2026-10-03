@@ -1,22 +1,42 @@
 import { createClient } from "redis";
+import { readFileSync } from "node:fs";
+
 import { env } from "./env.js";
 import { logger } from "./logger.js";
 import { serializeError } from "../utils/serialize-error.js";
-import { ApiError } from "../utils/ApiError.js";
 
 export let redisAvailable = false;
+
 const redisUrl =
     env.NODE_ENV === "test"
         ? env.REDIS_URL_TEST
         : env.REDIS_URL;
 
+
 if (!redisUrl) {
     throw new Error("Redis URL is missing");
 }
 
-export const redis = createClient({
-    url : redisUrl
-});
+const redisClientOptions =
+    env.NODE_ENV === "production"
+        ? {
+              url: redisUrl,
+              password: env.REDIS_AUTH!,
+              socket: {
+                  tls: true as const,
+                  ca: [
+                      readFileSync(
+                          env.REDIS_TLS_CA_PATH!,
+                          "utf8",
+                      ),
+                  ],
+              },
+          }
+        : {
+              url: redisUrl,
+          };
+
+export const redis = createClient(redisClientOptions);
 
 redis.on("connect", ()=> {
     logger.info("Redis Connected")
