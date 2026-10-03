@@ -17,21 +17,24 @@ if (!redisUrl) {
     throw new Error("Redis URL is missing");
 }
 
-const redisClientOptions = env.NODE_ENV === "production" ? {
-    url : redisUrl,
-    password: env.REDIS_AUTH,
-    socket : {
-        tls: true,
-        ca : [
-            readFileSync(env.REDIS_TLS_CA_PATH!,
-                    "utf8",
-                ),
-            ],
-        },
-    } : 
-    {
-        url : redisUrl,
-    };
+const redisClientOptions =
+    env.NODE_ENV === "production"
+        ? {
+              url: redisUrl,
+              password: env.REDIS_AUTH!,
+              socket: {
+                  tls: true as const,
+                  ca: [
+                      readFileSync(
+                          env.REDIS_TLS_CA_PATH!,
+                          "utf8",
+                      ),
+                  ],
+              },
+          }
+        : {
+              url: redisUrl,
+          };
 
 export const redis = createClient(redisClientOptions);
 
